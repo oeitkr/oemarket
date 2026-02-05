@@ -569,7 +569,7 @@ else if (item.isCanceled) {
   statusBgColor = "#e53e3e"; 
 }
 else if (item.isSold || item.status === "completed") { 
-  statusText = "✅ 완료"; 
+  statusText = "🤝판매완료"; 
   statusBgColor = "#718096"; 
 }
 else if (isExpired) { 

@@ -629,19 +629,38 @@ const handleSetReserved = async () => {
               >
                 {isLiked ? "🧡" : "🤍"}
               </button>
-              {isAuction && (
-                <div style={{ fontSize: "14px", color: data.status === "예약중" ? "#ed8936" : "#e53e3e", fontWeight: "bold", marginBottom: "4px" }}>
-                  {data.status === "예약중" ? "🕒 예약 완료" : (!isExpired ? `⏱ ${timeLeft}` : "⏳ 종료")}
-                </div>
-              )}
-              <div style={{ color: "#718096", fontSize: "13px" }}>{isAuction ? "현재 최고가" : "판매 가격"}</div>
-              {/* 🥒 [추가] 경매나 밀당경매일 경우에만 시작가를 작게 표시합니다. */}
-              {(isAuction || data.isMinusAuction) && (
-                <div style={{ fontSize: "12px", color: "#A0AEC0", marginTop: "2px" }}>
-                  시작가 {data.startPrice?.toLocaleString()}원
-                </div>
-              )}
-              <div style={{ fontSize: "28px", fontWeight: "900", color: "#2d3748", margin: "2px 0" }}>{displayPrice.toLocaleString()}원</div>
+              
+              {/* ---------------- 수정 후 코드 시작 ---------------- */}
+<div style={{ padding: "15px 20px", background: flashColor, borderRadius: "16px", border: "1px solid #edf2f7" }}>
+  
+  {/* 1. 경매 상태 (경매 종료 문구 등) */}
+  {isAuction && (
+    <div style={{ fontSize: "14px", color: data.status === "예약중" ? "#ed8936" : "#e53e3e", fontWeight: "bold", marginBottom: "12px" }}>
+      {data.status === "예약중" ? "🕒 예약 완료" : (!isExpired ? `⏱ ${timeLeft}` : "⏳ 경매 종료")}
+    </div>
+  )}
+
+  {/* 2. 최고가 안내 */}
+  <div style={{ color: "#718096", fontSize: "13px", fontWeight: "bold", marginBottom: "2px" }}>
+    {isAuction ? "현재 최고가" : "판매 가격"}
+  </div>
+
+  {/* 3. 금액과 시작가를 한 줄에 배치 */}
+  <div style={{ display: "flex", alignItems: "baseline", gap: "10px" }}>
+    {/* 현재 금액 */}
+    <div style={{ fontSize: "28px", fontWeight: "900", color: "#2d3748" }}>
+      {displayPrice.toLocaleString()}원
+    </div>
+
+    {/* 금액 바로 옆 시작가 */}
+    {(isAuction || data.isMinusAuction) && (
+      <div style={{ fontSize: "12px", color: "#A0AEC0", fontWeight: "normal" }}>
+        (시작가 {data.startPrice?.toLocaleString()}원)
+      </div>
+    )}
+  </div>
+</div>
+{/* ---------------- 수정 후 코드 끝 ---------------- */}
 
               {!isOwner && isAuction && !isExpired && data.status === "active" && data.buyNowPrice && (
                 <button
