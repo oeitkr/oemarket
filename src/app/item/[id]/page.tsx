@@ -385,6 +385,21 @@ alert("🎉 즉시 구매 예약이 완료되었습니다! 판매자와 채팅�
       alert("처리 중 오류가 발생했습니다.");
     }
   };
+  const handleComplete = async () => {
+  if (!window.confirm("거래가 완료되었나요? 판매완료 처리하시겠습니까?")) return;
+
+  try {
+    const itemRef = doc(db, "items", id);
+    await updateDoc(itemRef, {
+      status: "completed",
+      isSold: true,
+    });
+    alert("판매 완료 처리되었습니다! 🎉");
+  } catch (e) {
+    console.error(e);
+    alert("처리 중 오류가 발생했습니다.");
+  }
+};
 const handleSetReserved = async () => {
   if (!window.confirm("이 상품을 예약중으로 변경하시겠습니까?")) return;
 
@@ -453,8 +468,10 @@ const handleSetReserved = async () => {
         {/* 1. 상단 제목 영역 */}
         <div style={{ marginBottom: 15 }}>
           <div style={{ marginBottom: 6 }}>
-            {data.status === "예약중" ? (
-              <span style={{ background: "#ed8936", color: "white", padding: "3px 8px", borderRadius: 4, fontSize: 11, fontWeight: "bold" }}>🕒 예약중</span>
+            {data.status === "completed" ? (
+  <span style={{ background: "#718096", color: "white", padding: "3px 8px", borderRadius: 4, fontSize: 11, fontWeight: "bold" }}>✅ 판매완료</span>
+) : data.status === "예약중" ? (
+  <span style={{ background: "#ed8936", color: "white", padding: "3px 8px", borderRadius: 4, fontSize: 11, fontWeight: "bold" }}>🕒 예약중</span>
             ) : data.isMinusAuction ? (
               <span style={{ background: "#e53e3e", color: "white", padding: "3px 8px", borderRadius: 4, fontSize: 11, fontWeight: "bold" }}>🔥 밀당경매</span>
             ) : isAuction ? (
@@ -636,18 +653,26 @@ const handleSetReserved = async () => {
               )}
 
               {isOwner && (
-                <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {data.status === "예약중" && (
-                    <>
-                      <button onClick={openChatPopup} style={{ width: "100%", padding: "10px", background: "#3182ce", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "14px" }}>💬 구매자와 대화</button>
-                      <button onClick={handleRestartAuction} style={{ width: "100%", padding: "8px", background: "#fff", color: "#e53e3e", border: "1px solid #e53e3e", borderRadius: "10px", fontSize: "13px" }}>🚫 예약 취소</button>
-                    </>
-                  )}
+  <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
+    {/* 판매완료 상태 */}
+    {data.status === "completed" && (
+      <div style={{ padding: "15px", background: "#F7FAFC", borderRadius: "10px", textAlign: "center", color: "#718096", fontWeight: "bold" }}>
+        ✅ 거래가 완료되었습니다
+      </div>
+    )}
+    
+    {/* 예약중 상태 */}
+    {data.status === "예약중" && (
+      <>
+        <button onClick={openChatPopup} style={{ width: "100%", padding: "10px", background: "#3182ce", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "14px" }}>💬 구매자와 대화</button>
+        <button onClick={handleComplete} style={{ width: "100%", padding: "10px", background: "#3CB371", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "14px" }}>✅ 판매 완료</button>
+        <button onClick={handleRestartAuction} style={{ width: "100%", padding: "8px", background: "#fff", color: "#e53e3e", border: "1px solid #e53e3e", borderRadius: "10px", fontSize: "13px" }}>🚫 예약 취소</button>
+      </>
+    )}
 
-                  {/* 🥒 [수정] 예약중으로 변경 버튼 - 낙찰 또는 즉시구매 시 */}
-    {/* 🥒 [수정] 예약중으로 변경 버튼 - 입찰자가 있거나 즉시구매 시 */}
-{data.status !== "예약중" && (
-  data.bidCount > 0 || // 입찰자 있음 (시간 종료 안 돼도 OK)
+                  {/* 🥒 [수정] 예약중으로 변경 버튼 - 입찰자가 있거나 즉시구매 시 */}
+{data.status !== "예약중" && data.status !== "completed" && (
+  data.bidCount > 0 || // 입찰자 있음
   data.isSold // 즉시구매 완료
 ) && (
       <button 
