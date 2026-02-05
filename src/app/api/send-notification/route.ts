@@ -20,7 +20,6 @@ function initAdmin() {
 
   privateKey = privateKey
     .replace(/\\n/g, "\n")
-    .trim()
     .replace(/^"/, "")
     .replace(/"$/, "");
 
