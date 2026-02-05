@@ -44,7 +44,7 @@ export default function CreatePage() {
   const cardShadow = "0 10px 30px rgba(45, 90, 39, 0.05)";
 
   // --- [상태 관리 - 기존 모든 상태 유지] ---
-  const [saleMethod, setSaleMethod] = useState<"auction" | "fixed">("auction");
+  const [saleMethod, setSaleMethod] = useState<"auction" | "minus">("auction");
   const [category, setCategory] = useState("기타");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
@@ -179,17 +179,16 @@ export default function CreatePage() {
     setIsLoading(true);
     try {
       const durationMin = Number(duration);
-      const endTime = saleMethod === "auction" ? new Date(Date.now() + durationMin * 60 * 1000) : null;
-
+      const endTime = (saleMethod === "auction" || saleMethod === "minus") ? new Date(Date.now() + durationMin * 60 * 1000) : null;
       await addDoc(collection(db, "items"), {
         title, description, category, region: myLocation,
-        latitude, longitude, isMinusAuction, images, type: saleMethod,
+        latitude, longitude, isMinusAuction, images, type: saleMethod === "minus" ? "auction" : saleMethod,
         startPrice: numPrice, currentPrice: numPrice,
         minDesiredPrice: isMinusAuction ? numMinPrice : null,
         buyNowPrice: saleMethod === "auction" && numBuyNow > 0 ? numBuyNow : null,
         status: "active", createdAt: serverTimestamp(), endTime,
-        durationMin: saleMethod === "auction" ? durationMin : 0,
-        relistCount: (saleMethod === "auction" && autoRelist) ? 2 : 0,
+        durationMin: (saleMethod === "auction" || saleMethod === "minus") ? durationMin : 0,
+relistCount: ((saleMethod === "auction" || saleMethod === "minus") && autoRelist) ? 2 : 0,
         sellerUid: user.uid, sellerNickname: user.displayName || "익명",
         sellerEmail: user.email, bidCount: 0, isSold: false, viewCount: 0, // 👈 이 줄을 추가하세요! (조회수 초기값)
         wishCount: 0, // 👈 이 줄을 추가하세요! (찜 수 초기값)
@@ -221,9 +220,10 @@ export default function CreatePage() {
       </div>
 
       <div style={{ display: "flex", maxWidth: 400, gap: 10, marginBottom: 25, background: "white", padding: "8px", borderRadius: "16px", boxShadow: cardShadow }}>
-        <button type="button" onClick={() => setSaleMethod("auction")} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: saleMethod === "auction" ? mainGreen : "transparent", color: saleMethod === "auction" ? "white" : "#A0AEC0", fontWeight: "bold", cursor: "pointer" }}>🔨 경매 모드</button>
-        <button type="button" onClick={() => setSaleMethod("fixed")} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: saleMethod === "fixed" ? mainGreen : "transparent", color: saleMethod === "fixed" ? "white" : "#A0AEC0", fontWeight: "bold", cursor: "pointer" }}>💰 정가 판매</button>
-      </div>
+  <button type="button" onClick={() => { setSaleMethod("auction"); setIsMinusAuction(false); }} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: saleMethod === "auction" ? mainGreen : "transparent", color: saleMethod === "auction" ? "white" : "#A0AEC0", fontWeight: "bold", cursor: "pointer" }}>🔨 일반경매</button>
+  
+  <button type="button" onClick={() => { setSaleMethod("minus"); setIsMinusAuction(true); }} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: saleMethod === "minus" ? "#e53e3e" : "transparent", color: saleMethod === "minus" ? "white" : "#A0AEC0", fontWeight: "bold", cursor: "pointer" }}>🔥 밀당경매</button>
+</div>
 
       <form onSubmit={handleSubmit} className="responsive-form">
         <style jsx>{`
@@ -280,7 +280,7 @@ export default function CreatePage() {
           <div style={{ background: "#FDFBF7", padding: "20px", borderRadius: "18px", border: "1px solid #E0D7C6", marginBottom: 20 }}>
             <div style={{ display: "flex", gap: 12 }}>
               <div style={{ flex: 1 }}>
-                <label style={{ ...labelStyle, fontSize: "12px" }}>{saleMethod === "auction" ? "경매 시작가" : "판매 가격"}</label>
+                <label style={{ ...labelStyle, fontSize: "12px" }}>경매 시작가</label>
                 <input
                   type="text"
                   placeholder="0"
@@ -301,26 +301,25 @@ export default function CreatePage() {
                   style={{ ...inputStyle, background: "white", marginBottom: 0 }}
                 />
               </div>
-              {isMinusAuction && (
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <label style={{ ...labelStyle, fontSize: "12px", color: "#E53E3E" }}>최소 희망가 🔒</label>
-                    {/* 🥒 [추가] 사진에 말씀하신 경고 안내 문구입니다. */}
-                    <span style={{ fontSize: "13px", color: "#E53E3E", fontWeight: "bold", marginBottom: "8px", marginRight: "5px" }}>
-                      ⚠️ 시작가의 80% 이하 필수
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="0"
-                    value={minDesiredPrice}
-                    onChange={(e) => setMinDesiredPrice(Number(e.target.value.replace(/[^0-9]/g, "")).toLocaleString())}
-                    style={{ ...inputStyle, background: "white", border: "1px solid #FEB2B2", marginBottom: 0 }}
-                  />
-                </div>
-              )}
+             {saleMethod === "minus" && (
+  <div style={{ flex: 1 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <label style={{ ...labelStyle, fontSize: "12px", color: "#E53E3E" }}>최소 희망가 🔒</label>
+      <span style={{ fontSize: "13px", color: "#E53E3E", fontWeight: "bold", marginBottom: "8px", marginRight: "5px" }}>
+        ⚠️ 시작가의 80% 이하 필수
+      </span>
+    </div>
+    <input
+      type="text"
+      placeholder="0"
+      value={minDesiredPrice}
+      onChange={(e) => setMinDesiredPrice(Number(e.target.value.replace(/[^0-9]/g, "")).toLocaleString())}
+      style={{ ...inputStyle, background: "white", border: "1px solid #FEB2B2", marginBottom: 0 }}
+    />
+  </div>
+)}
             </div>
-            {saleMethod === "auction" && !isMinusAuction && (
+            {saleMethod === "auction" && (
               <div style={{ marginTop: 15 }}>
                 <label style={{ ...labelStyle, fontSize: "12px" }}>즉시 구매가 (선택)</label>
                 <input type="text" placeholder="선택 사항" value={buyNowPrice} onChange={(e) => setBuyNowPrice(Number(e.target.value.replace(/[^0-9]/g, "")).toLocaleString())} style={{ ...inputStyle, background: "white", marginBottom: 0 }} />
@@ -328,7 +327,7 @@ export default function CreatePage() {
             )}
           </div>
 
-          {saleMethod === "auction" && (
+          {(saleMethod === "auction" || saleMethod === "minus") && (
             <div style={{ display: "flex", flexDirection: "column", gap: 15, marginBottom: 20 }}>
               <div>
                 <label style={labelStyle}>마감 시간</label>
@@ -338,14 +337,13 @@ export default function CreatePage() {
                   <option value="4320">3일</option>
                   <option value="custom">✍️ 직접 입력</option>
                 </select>
-                {/* 수정 후 교체할 코드 */}
                 {isCustom && (
                   <div style={{ position: "relative", marginTop: "-10px", marginBottom: "15px" }}>
                     <input
                       type="number"
                       placeholder="최소 30분"
-                      min="30"      /* 최소값을 30분으로 제한 */
-                      step="60"     /* 화살표 클릭 시 60분(1시간)씩 증가/감소 */
+                      min="30"
+                      step="60"
                       value={duration}
                       onChange={(e) => setDuration(e.target.value)}
                       style={{ ...inputStyle, border: `2px solid ${mainGreen}` }}
@@ -359,10 +357,6 @@ export default function CreatePage() {
                 <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "10px", borderRadius: "12px", border: "1px solid #E0D7C6" }}>
                   <input type="checkbox" checked={autoRelist} onChange={(e) => setAutoRelist(e.target.checked)} style={{ width: 20, height: 20, accentColor: mainGreen }} />
                   <span style={{ fontSize: "13px", fontWeight: "600", color: "#333" }}>자동 재등록 (최대 2회)</span>
-                </label>
-                <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "10px", borderRadius: "12px", border: isMinusAuction ? `2px solid #FEB2B2` : `1px solid #E0D7C6`, background: isMinusAuction ? "#FFF5F5" : "transparent" }}>
-                  <input type="checkbox" checked={isMinusAuction} onChange={(e) => { if (e.target.checked) { if (confirm("🔥 밀당경매를 활성화 하시겠습니까?")) setIsMinusAuction(true); } else setIsMinusAuction(false); }} style={{ width: 20, height: 20, accentColor: "#E53E3E" }} />
-                  <span style={{ fontSize: "13px", fontWeight: "600", color: isMinusAuction ? "#E53E3E" : "#333" }}>🔥 밀당경매 모드 활성화</span>
                 </label>
               </div>
             </div>

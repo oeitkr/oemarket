@@ -385,7 +385,20 @@ alert("🎉 즉시 구매 예약이 완료되었습니다! 판매자와 채팅�
       alert("처리 중 오류가 발생했습니다.");
     }
   };
+const handleSetReserved = async () => {
+  if (!window.confirm("이 상품을 예약중으로 변경하시겠습니까?")) return;
 
+  try {
+    const itemRef = doc(db, "items", id);
+    await updateDoc(itemRef, {
+      status: "예약중",
+    });
+    alert("예약중으로 변경되었습니다! 🥒");
+  } catch (e) {
+    console.error(e);
+    alert("처리 중 오류가 발생했습니다.");
+  }
+};
   // 📍 원래 있던 삭제 함수를 제대로 닫아주는 코드입니다.
   const handleDelete = async () => {
     if (data.bidCount > 0) return alert("참여자가 있어 삭제할 수 없습니다.");
@@ -565,10 +578,30 @@ alert("🎉 즉시 구매 예약이 완료되었습니다! 판매자와 채팅�
             </div>
 
             {!isOwner && (
-              <button onClick={openChatPopup} style={{ width: "100%", padding: "10px", background: (data.status === "예약중" && data.lastBidderUid === meUid) ? "#3182ce" : "#3CB371", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "14px", cursor: "pointer" }}>
-                💬 {data.sellerNickname}님과 대화하기
-              </button>
-            )}
+  <button 
+    onClick={() => {
+      if (data.lastBidderUid !== meUid) {
+        return alert("입찰 후에 대화할 수 있습니다! 🥒");
+      }
+      openChatPopup();
+    }}
+    disabled={data.lastBidderUid !== meUid}
+    style={{ 
+      width: "100%", 
+      padding: "10px", 
+      background: data.lastBidderUid !== meUid ? "#E0D7C6" : ((data.status === "예약중" && data.lastBidderUid === meUid) ? "#3182ce" : "#3CB371"), 
+      color: "white", 
+      border: "none", 
+      borderRadius: "10px", 
+      fontWeight: "bold", 
+      fontSize: "14px", 
+      cursor: data.lastBidderUid !== meUid ? "not-allowed" : "pointer",
+      opacity: data.lastBidderUid !== meUid ? 0.5 : 1
+    }}
+  >
+    💬 {data.lastBidderUid !== meUid ? "입찰 후 대화 가능" : `${data.sellerNickname}님과 대화하기`}
+  </button>
+)}
 
             {/* 가격 카드 */}
             <div style={{ padding: "15px 20px", background: flashColor, borderRadius: "16px", border: "1px solid #edf2f7", position: "relative" }}>
@@ -610,6 +643,30 @@ alert("🎉 즉시 구매 예약이 완료되었습니다! 판매자와 채팅�
                       <button onClick={handleRestartAuction} style={{ width: "100%", padding: "8px", background: "#fff", color: "#e53e3e", border: "1px solid #e53e3e", borderRadius: "10px", fontSize: "13px" }}>🚫 예약 취소</button>
                     </>
                   )}
+
+                  {/* 🥒 [수정] 예약중으로 변경 버튼 - 낙찰 또는 즉시구매 시 */}
+    {/* 🥒 [수정] 예약중으로 변경 버튼 - 입찰자가 있거나 즉시구매 시 */}
+{data.status !== "예약중" && (
+  data.bidCount > 0 || // 입찰자 있음 (시간 종료 안 돼도 OK)
+  data.isSold // 즉시구매 완료
+) && (
+      <button 
+        onClick={handleSetReserved} 
+        style={{ 
+          width: "100%", 
+          padding: "10px", 
+          background: "#ed8936", 
+          color: "white", 
+          border: "none", 
+          borderRadius: "10px", 
+          fontWeight: "bold", 
+          fontSize: "14px",
+          cursor: "pointer"
+        }}
+      >
+        🕒 예약중으로 변경
+      </button>
+    )}
                   {/* 📍 수정/삭제 버튼 영역: 입찰자가 있으면 막는 로직 추가 */}
                   <div style={{ display: "flex", gap: "8px" }}>
                     {/* 1. 수정 버튼 */}
@@ -659,12 +716,11 @@ alert("🎉 즉시 구매 예약이 완료되었습니다! 판매자와 채팅�
               )}
             </div>
 
-            {/* 입찰 섹션 (오른쪽 섹션 안으로 포함) */}
-            {!isOwner && isAuction && !isExpired && data.status === "active" && (
+                        {/* 입찰 섹션 (오른쪽 섹션 안으로 포함) */}
+{!isOwner && isAuction && !isExpired && data.status === "active" && (
               <div style={{ padding: "15px", background: "white", borderRadius: "16px", border: "1px solid #3CB371", marginTop: "10px" }}>
                 <h3 style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "8px" }}>🔨 입찰하기</h3>
-                {/* 📍 밀당경매 버튼 영역을 아래 코드로 교체하세요 */}
-                {/* 📍 밀당경매 UI: 일반경매처럼 금액 조절 후 입찰하도록 변경 */}
+                                {/* 📍 밀당경매 UI: 일반경매처럼 금액 조절 후 입찰하도록 변경 */}
                 {data.isMinusAuction ? (
                   <div style={{ padding: "15px", background: "white", borderRadius: "16px", border: "1px solid #E53E3E", marginTop: "10px" }}>
                     <h3 style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "8px", color: "#E53E3E" }}>🔥 밀당경매 금액 조절</h3>

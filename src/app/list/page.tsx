@@ -557,11 +557,25 @@ export default function ListPage() {
                 if (end && end.getTime() <= now) isExpired = true;
               }
               let statusText = item.isMinusAuction ? "밀당경매" : item.type === "fixed" ? "일반판매" : "일반경매";
-              let statusBgColor = item.isMinusAuction ? "#e53e3e" : item.type === "fixed" ? "#3CB371" : "#0d3ee2ff";
-              if (item.isCanceled) { statusText = "❌ 취소"; statusBgColor = "#e53e3e"; }
-              else if (item.isSold || item.status === "completed") { statusText = "✅ 완료"; statusBgColor = "#718096"; }
-              else if (item.status === "예약중") { statusText = "🕒 예약중"; statusBgColor = "#ed8936"; }
-              else if (isExpired) { statusText = item.bidCount > 0 ? "🔨 낙찰됨" : "⏳ 만료"; statusBgColor = item.bidCount > 0 ? "#3CB371" : "#a0aec0"; }
+let statusBgColor = item.isMinusAuction ? "#e53e3e" : item.type === "fixed" ? "#3CB371" : "#0d3ee2ff";
+
+// 🥒 [수정] 예약중을 가장 우선으로 체크
+if (item.status === "예약중") { 
+  statusText = "🕒 예약중"; 
+  statusBgColor = "#ed8936"; 
+}
+else if (item.isCanceled) { 
+  statusText = "❌ 취소"; 
+  statusBgColor = "#e53e3e"; 
+}
+else if (item.isSold || item.status === "completed") { 
+  statusText = "✅ 완료"; 
+  statusBgColor = "#718096"; 
+}
+else if (isExpired) { 
+  statusText = item.bidCount > 0 ? "🔨 낙찰됨" : "⏳ 만료"; 
+  statusBgColor = item.bidCount > 0 ? "#3CB371" : "#a0aec0"; 
+}
               return (
                 <Fragment key={item.id}>
                   {/* 상품 카드 시작 */}
