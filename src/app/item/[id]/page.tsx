@@ -69,23 +69,34 @@ export default function ItemDetailPage() {
       // @ts-ignore
       const naver = window.naver;
 
-      // 🥒 데이터도 있고, 네이버 도구도 있고, 지도를 그릴 '그릇'도 모두 준비되었을 때만 실행!
-      if (data?.latitude && naver?.maps && mapElement) {
+      // ... (약 72라인)
+      // 🥒 [수정] 데이터가 location이라는 보관함 안에 있는지 먼저 확인합니다.
+      const lat = data?.location?.latitude || data?.latitude;
+      const lng = data?.location?.longitude || data?.longitude;
+
+      if (lat && lng && naver?.maps && mapElement) {
+        
+        // 숫자로 안전하게 변환합니다.
+        const finalLat = Number(lat);
+        const finalLng = Number(lng);
+
         const mapOptions = {
-          center: new naver.maps.LatLng(data.latitude, data.longitude),
+          center: new naver.maps.LatLng(finalLat, finalLng),
           zoom: 14,
         };
         const map = new naver.maps.Map("map", mapOptions);
-        
+
+        // 디자인 로직 (파란색 원 유지)
         const offsetLat = (Math.random() - 0.5) * 0.0015;
         const offsetLng = (Math.random() - 0.5) * 0.0015;
-        const blurredLocation = new naver.maps.LatLng(data.latitude + offsetLat, data.longitude + offsetLng);
+        const blurredLocation = new naver.maps.LatLng(finalLat + offsetLat, finalLng + offsetLng);
 
         new naver.maps.Circle({
           map: map, center: blurredLocation, radius: 500,
           fillColor: '#3182ce', fillOpacity: 0.2, strokeColor: '#3182ce',
           strokeOpacity: 0.4, strokeWeight: 2, clickable: false
         });
+// ... (이하 생략)
         console.log("✅ 새로고침 없이 지도 연결 성공!");
       } else {
         // ⏳ 아직 하나라도 준비가 안 됐다면(특히 로딩 중이라 그릇이 없으면) 0.3초 뒤에 다시 시도합니다.
@@ -128,6 +139,7 @@ export default function ItemDetailPage() {
       if (snap.exists()) {
         const item = snap.data();
         setData(item);
+        console.log("아이템 데이터 확인:", item); // 👈 이 코드를 추가해 주세요!
 
         // 🥒 [추가] 판매자 아이디(sellerUid)로 유저 정보를 찾아 사진 주소를 가져옵니다.
         if (item.sellerUid) {
@@ -820,13 +832,13 @@ const handleSetReserved = async () => {
           </div> {/* 오른쪽 섹션 끝 */}
         </div> {/* 메인 Flex 컨테이너 끝 */}
 
-        {/* 4. 지도 영역 */}
-        {data.latitude && data.longitude && (
-          <div style={{ marginTop: "20px", borderTop: "1px solid #eee", paddingTop: "15px" }}>
-            <label style={{ fontWeight: "bold", display: "block", marginBottom: "10px", fontSize: "14px" }}>📍 거래 희망 장소</label>
-            <div id="map" style={{ width: "100%", height: "250px", borderRadius: "16px", border: "1px solid #eee" }}></div>
-          </div>
-        )}
+        {/* 4. 지도 영역 (수정됨) */}
+{(data.location?.latitude || data.latitude) && (
+  <div style={{ marginTop: "20px", borderTop: "1px solid #eee", paddingTop: "15px" }}>
+    <label style={{ fontWeight: "bold", display: "block", marginBottom: "10px", fontSize: "14px" }}>📍 거래 희망 장소</label>
+    <div id="map" style={{ width: "100%", height: "250px", borderRadius: "16px", border: "1px solid #eee" }}></div>
+  </div>
+)}
       </main>
 
       {/* 📍 [수정된 코드] 이미지 확대 및 슬라이드 뷰어 */}

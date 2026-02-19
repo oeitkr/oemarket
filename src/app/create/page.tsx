@@ -44,7 +44,8 @@ export default function CreatePage() {
   const cardShadow = "0 10px 30px rgba(45, 90, 39, 0.05)";
 
   // --- [상태 관리 - 기존 모든 상태 유지] ---
-  const [saleMethod, setSaleMethod] = useState<"auction" | "minus">("auction");
+ // --- [상태 관리 - 'giveaway(나눔)' 추가] ---
+  const [saleMethod, setSaleMethod] = useState<"auction" | "minus" | "giveaway">("auction");
   const [category, setCategory] = useState("기타");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
@@ -219,12 +220,14 @@ relistCount: ((saleMethod === "auction" || saleMethod === "minus") && autoRelist
         <h1 style={{ fontSize: 26, fontWeight: "800", color: mainGreen, margin: 0 }}>🥒상품 등록하기</h1>
       </div>
 
-      <div style={{ display: "flex", maxWidth: 400, gap: 10, marginBottom: 25, background: "white", padding: "8px", borderRadius: "16px", boxShadow: cardShadow }}>
+      <div style={{ display: "flex", maxWidth: 550, gap: 10, marginBottom: 25, background: "white", padding: "8px", borderRadius: "16px", boxShadow: cardShadow }}>
   <button type="button" onClick={() => { setSaleMethod("auction"); setIsMinusAuction(false); }} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: saleMethod === "auction" ? mainGreen : "transparent", color: saleMethod === "auction" ? "white" : "#A0AEC0", fontWeight: "bold", cursor: "pointer" }}>🔨 일반경매</button>
   
   <button type="button" onClick={() => { setSaleMethod("minus"); setIsMinusAuction(true); }} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: saleMethod === "minus" ? "#e53e3e" : "transparent", color: saleMethod === "minus" ? "white" : "#A0AEC0", fontWeight: "bold", cursor: "pointer" }}>🔥 밀당경매</button>
-</div>
 
+  {/* 🎁 나눔 버튼 추가: 파란색 계열로 포인트를 주었습니다. */}
+  <button type="button" onClick={() => { setSaleMethod("giveaway"); setIsMinusAuction(false); }} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: saleMethod === "giveaway" ? "#4A90E2" : "transparent", color: saleMethod === "giveaway" ? "white" : "#A0AEC0", fontWeight: "bold", cursor: "pointer" }}>🎁 나눔</button>
+</div>
       <form onSubmit={handleSubmit} className="responsive-form">
         <style jsx>{`
           .responsive-form {
@@ -270,62 +273,63 @@ relistCount: ((saleMethod === "auction" || saleMethod === "minus") && autoRelist
 
         {/* [오른쪽] 상품 정보 및 경매 설정 */}
         <div>
-
-
           <label style={labelStyle}>카테고리</label>
           <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle}>
             {CATEGORIES.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
           </select>
 
-          <div style={{ background: "#FDFBF7", padding: "20px", borderRadius: "18px", border: "1px solid #E0D7C6", marginBottom: 20 }}>
-            <div style={{ display: "flex", gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ ...labelStyle, fontSize: "12px" }}>경매 시작가</label>
-                <input
-                  type="text"
-                  placeholder="0"
-                  value={price}
-                  onChange={(e) => {
-                    const rawValue = e.target.value.replace(/[^0-9]/g, "");
-                    const numValue = Number(rawValue);
-
-                    // 1. 시작가 칸에 숫자 업데이트
-                    setPrice(numValue.toLocaleString());
-
-                    // 2. 🥒 [추가] 밀당경매 모드라면 최소 희망가를 시작가의 80%(-20%)로 자동 계산
-                    if (isMinusAuction) {
-                      const autoMinPrice = Math.floor(numValue * 0.8);
-                      setMinDesiredPrice(autoMinPrice.toLocaleString());
-                    }
-                  }}
-                  style={{ ...inputStyle, background: "white", marginBottom: 0 }}
-                />
+          {/* ✅ 가격 설정 구역: 나눔이 아닐 때만 보입니다. */}
+          {saleMethod !== "giveaway" && (
+            <div style={{ background: "#FDFBF7", padding: "20px", borderRadius: "18px", border: "1px solid #E0D7C6", marginBottom: 20 }}>
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ ...labelStyle, fontSize: "12px" }}>경매 시작가</label>
+                  <input
+                    type="text"
+                    placeholder="0"
+                    value={price}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      const numValue = Number(rawValue);
+                      setPrice(numValue.toLocaleString());
+                      if (isMinusAuction) {
+                        const autoMinPrice = Math.floor(numValue * 0.8);
+                        setMinDesiredPrice(autoMinPrice.toLocaleString());
+                      }
+                    }}
+                    style={{ ...inputStyle, background: "white", marginBottom: 0 }}
+                  />
+                </div>
+                {saleMethod === "minus" && (
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <label style={{ ...labelStyle, fontSize: "12px", color: "#E53E3E" }}>최소 희망가 🔒</label>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="0"
+                      value={minDesiredPrice}
+                      onChange={(e) => setMinDesiredPrice(Number(e.target.value.replace(/[^0-9]/g, "")).toLocaleString())}
+                      style={{ ...inputStyle, background: "white", border: "1px solid #FEB2B2", marginBottom: 0 }}
+                    />
+                  </div>
+                )}
               </div>
-             {saleMethod === "minus" && (
-  <div style={{ flex: 1 }}>
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <label style={{ ...labelStyle, fontSize: "12px", color: "#E53E3E" }}>최소 희망가 🔒</label>
-      <span style={{ fontSize: "13px", color: "#E53E3E", fontWeight: "bold", marginBottom: "8px", marginRight: "5px" }}>
-        ⚠️ 시작가의 80% 이하 필수
-      </span>
-    </div>
-    <input
-      type="text"
-      placeholder="0"
-      value={minDesiredPrice}
-      onChange={(e) => setMinDesiredPrice(Number(e.target.value.replace(/[^0-9]/g, "")).toLocaleString())}
-      style={{ ...inputStyle, background: "white", border: "1px solid #FEB2B2", marginBottom: 0 }}
-    />
-  </div>
-)}
+              {saleMethod === "auction" && (
+                <div style={{ marginTop: 15 }}>
+                  <label style={{ ...labelStyle, fontSize: "12px" }}>즉시 구매가 (선택)</label>
+                  <input type="text" placeholder="선택 사항" value={buyNowPrice} onChange={(e) => setBuyNowPrice(Number(e.target.value.replace(/[^0-9]/g, "")).toLocaleString())} style={{ ...inputStyle, background: "white", marginBottom: 0 }} />
+                </div>
+              )}
             </div>
-            {saleMethod === "auction" && (
-              <div style={{ marginTop: 15 }}>
-                <label style={{ ...labelStyle, fontSize: "12px" }}>즉시 구매가 (선택)</label>
-                <input type="text" placeholder="선택 사항" value={buyNowPrice} onChange={(e) => setBuyNowPrice(Number(e.target.value.replace(/[^0-9]/g, "")).toLocaleString())} style={{ ...inputStyle, background: "white", marginBottom: 0 }} />
-              </div>
-            )}
-          </div>
+          )}
+
+          {/* ✅ 나눔 전용 안내 문구 */}
+          {saleMethod === "giveaway" && (
+            <div style={{ background: "#EBF8FF", padding: "20px", borderRadius: "18px", border: "1px solid #4A90E2", marginBottom: 20, textAlign: "center" }}>
+              <span style={{ fontSize: "15px", fontWeight: "700", color: "#2B6CB0" }}>🎁 나눔 상품은 0원으로 등록됩니다!</span>
+            </div>
+          )}
 
           {(saleMethod === "auction" || saleMethod === "minus") && (
             <div style={{ display: "flex", flexDirection: "column", gap: 15, marginBottom: 20 }}>
@@ -362,18 +366,7 @@ relistCount: ((saleMethod === "auction" || saleMethod === "minus") && autoRelist
             </div>
           )}
 
-          {/* 🥒 [추가] 실제 지도가 그려지는 상자입니다. */}
-          <div
-            id="map"
-            style={{
-              width: "100%",
-              height: "200px",
-              borderRadius: "16px",
-              marginBottom: "15px",
-              border: "1px solid #E0D7C6",
-              boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)"
-            }}
-          ></div>
+          <div id="map" style={{ width: "100%", height: "200px", borderRadius: "16px", marginBottom: "15px", border: "1px solid #E0D7C6", boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)" }}></div>
 
           <div style={{ fontSize: "14px", color: mainGreen, fontWeight: "bold", marginBottom: "20px", textAlign: "right" }}>
             📍 현재 위치: {myLocation}

@@ -47,8 +47,7 @@ export async function POST(req: Request) {
     // ✅ 기존 채팅(fcmTitle)도 살리고, 새로운 입찰(title)도 인식하게 만듭니다.
     const payloadData: Record<string, string> = {
       // 1. 서비스 워커(v5.0)가 읽는 이름
-      // 🥒 [수정] 외부에서 어떤 제목이 들어오든 무조건 '🥒 오이마켓'으로 고정합니다.
-      title: "🥒 오이마켓",
+            title: "🥒 오이마켓",
       body: String(body ?? "새 메시지가 도착했습니다."),
 
       // 2. 기존 채팅 로직이 쓰고 있던 이름 (보험용)
