@@ -840,7 +840,7 @@ const handleSetReserved = async () => {
   </div>
 )}
       </main>
-
+ 
       {/* 📍 [수정된 코드] 이미지 확대 및 슬라이드 뷰어 */}
       {isViewerOpen && (
         <div
